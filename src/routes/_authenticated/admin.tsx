@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchProducts, productsKey } from "@/lib/products";
 import { CATEGORIES, IMAGE_KEYS, imageFor, type MenuItem } from "@/lib/menu";
 import { formatRand, ORDER_STATUSES } from "@/lib/order";
+import { deleteDemoProduct, getDemoOrders, saveDemoProduct, setDemoOrderStatus } from "@/lib/demo";
+import { useProducts } from "@/lib/products";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -26,11 +29,11 @@ export const Route = createFileRoute("/_authenticated/admin")({
 type Item = { id: string; name: string; qty: number; price: number };
 const TABS = ["Overview", "Orders", "Products"] as const;
 
-function Admin() {
-  const { isAdmin, loading, user } = useAuth();
+export function Admin() {
+  const { isAdmin, loading, user, demoRole, signOut } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
-  if (loading) return <Page><p className="p-10 text-center text-muted-foreground">Loading…</p></Page>;
-  if (!isAdmin) return (
+  if (loading && !demoRole) return <Page><p className="p-10 text-center text-muted-foreground">Loading…</p></Page>;
+  if (!isAdmin && demoRole !== "owner") return (
     <Page>
       <div className="m-4 md:mx-auto md:max-w-md mt-16 rounded-2xl border border-border bg-card p-6 text-center">
         <p>{user?.email} doesn't have owner access.</p>
@@ -42,6 +45,7 @@ function Admin() {
     <Page>
       <div className="px-4 mt-6 md:mt-10 flex flex-wrap gap-4 justify-between items-end">
         <h1 className="font-display text-4xl md:text-6xl uppercase">Owner <span className="text-primary">Dashboard</span></h1>
+        {demoRole && <div className="flex items-center gap-3 text-sm"><span className="text-accent">Demo · sample data</span><Button variant="link" onClick={signOut}>Sign out</Button></div>}
         <div className="flex rounded-full border border-border bg-card p-1">
           {TABS.map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-full text-sm font-semibold ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{t}</button>
@@ -59,16 +63,19 @@ function Admin() {
 
 function useOrders() {
   const qc = useQueryClient();
+  const { demoRole } = useAuth();
+  const key = demoRole ? ["demo-orders"] : ["admin-orders"];
   const q = useQuery({
-    queryKey: ["admin-orders"],
+    queryKey: key,
     queryFn: async () => {
+      if (demoRole) return getDemoOrders();
       const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(1000);
       if (error) throw error;
       return data;
     },
     refetchInterval: 30000,
   });
-  return { ...q, refresh: () => qc.invalidateQueries({ queryKey: ["admin-orders"] }) };
+  return { ...q, refresh: () => qc.invalidateQueries({ queryKey: key }) };
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -82,7 +89,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function Overview() {
   const { data = [] } = useOrders();
-  const { data: products = [] } = useQuery({ queryKey: productsKey, queryFn: fetchProducts });
+  const { products } = useProducts();
   const s = useMemo(() => {
     const valid = data.filter((o) => o.status !== "cancelled");
     const start = new Date(); start.setHours(0, 0, 0, 0);
@@ -128,11 +135,13 @@ function Overview() {
 }
 
 function Orders() {
+  const { demoRole } = useAuth();
   const { data = [], refresh, isLoading } = useOrders();
   const [filter, setFilter] = useState<"open" | "all">("open");
   const list = filter === "open" ? data.filter((o) => ["new", "preparing", "ready"].includes(o.status)) : data;
   const setStatus = async (id: string, status: string) => {
-    await supabase.from("orders").update({ status }).eq("id", id);
+    if (demoRole) setDemoOrderStatus(id, status);
+    else await supabase.from("orders").update({ status }).eq("id", id);
     refresh();
   };
   return (
@@ -164,8 +173,9 @@ function Orders() {
 
 function Products() {
   const qc = useQueryClient();
-  const { data: products = [] } = useQuery({ queryKey: productsKey, queryFn: fetchProducts });
-  const refresh = () => qc.invalidateQueries({ queryKey: productsKey });
+  const { demoRole } = useAuth();
+  const { products } = useProducts();
+  const refresh = () => qc.invalidateQueries({ queryKey: demoRole ? ["demo-products"] : productsKey });
   const [adding, setAdding] = useState(false);
   return (
     <div>
@@ -182,6 +192,7 @@ function Products() {
 }
 
 function ProductRow({ product, isNew, onSaved }: { product?: MenuItem; isNew?: boolean; onSaved: () => void }) {
+  const { demoRole } = useAuth();
   const init = () => ({
     name: product?.name ?? "", price: String(product?.price ?? ""), category: product?.category ?? "burgers",
     image: product?.imageKey ?? "grill", tag: product?.tag ?? "", stock: product?.stock == null ? "" : String(product.stock),
@@ -197,15 +208,21 @@ function ProductRow({ product, isNew, onSaved }: { product?: MenuItem; isNew?: b
     if (!f.name.trim() || !(price >= 0) || Number.isNaN(price) || (stock !== null && Number.isNaN(stock))) return setState("Check name, price and stock");
     setState("saving");
     const row = { name: f.name.trim().slice(0, 80), price, category: f.category, image: f.image, tag: f.tag.trim() || null, stock, in_stock: stock === 0 ? false : f.in_stock };
+    if (!isNew && !product) { setState("Product not found"); return; }
+    if (demoRole) {
+      saveDemoProduct({ id: product?.id ?? `demo-product-${Date.now()}`, name: row.name, price, category: row.category, imageKey: row.image, image: imageFor(row.image), tag: row.tag, stock, inStock: row.in_stock });
+      setState("saved"); onSaved(); return;
+    }
     const { error } = isNew
       ? await supabase.from("products").insert({ ...row, id: f.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + "-" + Date.now().toString(36), sort: 999 })
-      : await supabase.from("products").update(row).eq("id", product!.id);
+      : await supabase.from("products").update(row).eq("id", product?.id ?? "");
     setState(error ? error.message : "saved");
     if (!error) onSaved();
   };
   const remove = async () => {
     if (!product || !confirm(`Delete ${product.name}?`)) return;
-    await supabase.from("products").delete().eq("id", product.id);
+    if (demoRole) deleteDemoProduct(product.id);
+    else await supabase.from("products").delete().eq("id", product.id);
     onSaved();
   };
   const inp = "rounded-lg bg-secondary border border-border px-2.5 py-2 text-sm outline-none focus:border-primary min-w-0";

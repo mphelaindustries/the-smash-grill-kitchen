@@ -16,6 +16,8 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Smash burgers, shawarma, chicken & loaded fries. Order online, pay on pickup." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: IMAGES.platter },
+      { name: "twitter:image", content: IMAGES.platter },
     ],
   }),
   component: Home,

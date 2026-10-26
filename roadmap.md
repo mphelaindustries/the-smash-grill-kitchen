@@ -1,3 +1,3 @@
-- [ ] Add visible customer and owner demo credentials with isolated browser sessions.
-- [ ] Connect sample account, orders, products and checkout without real private reads or writes.
-- [ ] Verify both demo login flows and sample-only changes.
+- [x] Add visible customer and owner demo credentials with isolated browser sessions.
+- [x] Connect sample account, orders, products and checkout without real private reads or writes.
+- [x] Verify both demo login flows and sample-only changes.

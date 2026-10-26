@@ -4,10 +4,10 @@ import grill from "@/assets/grill.jpg.asset.json";
 import chicken from "@/assets/chicken.jpg";
 import grabs from "@/assets/grabs.jpg";
 
-export const IMAGES: Record<string, string> = { wrap: wrap.url, platter: platter.url, grill: grill.url, chicken, grabs };
+export const IMAGES = { wrap: wrap.url, platter: platter.url, grill: grill.url, chicken, grabs };
 export const IMAGE_KEYS = Object.keys(IMAGES);
 /** Products store an image key (wrap, grill…) or a full URL. */
-export const imageFor = (key: string) => IMAGES[key] ?? key;
+export const imageFor = (key: string) => (IMAGES as Record<string, string>)[key] ?? key;
 
 export type Category = "burgers" | "chicken" | "shawarma" | "grabs";
 export const CATEGORIES: { id: Category; label: string; emoji: string }[] = [

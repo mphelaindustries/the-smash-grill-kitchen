@@ -22,7 +22,7 @@ export function AuthForm({ title, subtitle, allowSignup, onDone }: { title: stri
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const r = schema.safeParse(form);
-    if (!r.success) return setMsg({ type: "err", text: r.error.issues[0].message });
+    if (!r.success) return setMsg({ type: "err", text: r.error.issues[0]?.message ?? "Check your details" });
     setBusy(true); setMsg(null);
     if (mode === "in") {
       const { error } = await supabase.auth.signInWithPassword({ email: r.data.email, password: r.data.password });

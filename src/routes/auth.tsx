@@ -21,13 +21,12 @@ export const Route = createFileRoute("/auth")({
 function CustomerAuth() {
   const { redirect } = Route.useSearch();
   const navigate = useNavigate();
-  const safe = redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/account";
+  const safe = redirect === "/cart" ? "/cart" : "/demo/account";
   return (
     <Page>
       <AuthForm
         title="Welcome back"
         subtitle="Sign in to save your details and track your orders."
-        allowSignup
         onDone={() => navigate({ to: safe })}
       />
     </Page>

@@ -16,7 +16,9 @@ export function WhatsAppIcon({ className }: { className?: string }) {
 }
 
 function AccountLink({ className }: { className: string }) {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, demoRole } = useAuth();
+  if (demoRole === "owner") return <Link to="/demo/admin" className={className}><LayoutDashboard className="h-5 w-5" /><span>Dashboard</span></Link>;
+  if (demoRole === "customer") return <Link to="/demo/account" className={className}><User className="h-5 w-5" /><span>Account</span></Link>;
   if (isAdmin) return <Link to="/admin" className={className}><LayoutDashboard className="h-5 w-5" /><span>Dashboard</span></Link>;
   if (user) return <Link to="/account" className={className}><User className="h-5 w-5" /><span>Account</span></Link>;
   return <Link to="/auth" className={className}><User className="h-5 w-5" /><span>Sign in</span></Link>;

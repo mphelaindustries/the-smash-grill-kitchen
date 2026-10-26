@@ -5,6 +5,7 @@ import { Page } from "@/components/Shell";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatRand } from "@/lib/order";
+import { getDemoOrders } from "@/lib/demo";
 
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({
@@ -23,8 +24,8 @@ export const Route = createFileRoute("/_authenticated/account")({
 
 type Item = { name: string; qty: number; price: number };
 
-function Account() {
-  const { user, signOut } = useAuth();
+export function Account() {
+  const { user, signOut, demoRole } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [form, setForm] = useState({ full_name: "", phone: "" });
@@ -32,12 +33,18 @@ function Account() {
 
   const profile = useQuery({
     queryKey: ["profile", user?.id], enabled: !!user,
-    queryFn: async () => (await supabase.from("profiles").select("full_name, phone").eq("id", user!.id).maybeSingle()).data,
+    queryFn: async () => {
+      if (demoRole) return { full_name: "Demo Customer", phone: "0000000000" };
+      if (!user) return null;
+      return (await supabase.from("profiles").select("full_name, phone").eq("id", user.id).maybeSingle()).data;
+    },
   });
   const orders = useQuery({
     queryKey: ["my-orders", user?.id], enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("orders").select("*").eq("user_id", user!.id).order("created_at", { ascending: false });
+      if (demoRole) return (await getDemoOrders()).filter((o) => o.user_id === "demo-customer");
+      if (!user) return [];
+      const { data, error } = await supabase.from("orders").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -46,7 +53,9 @@ function Account() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    await supabase.from("profiles").update({ full_name: form.full_name.trim().slice(0, 80), phone: form.phone.trim().slice(0, 20) }).eq("id", user!.id);
+    if (demoRole) { setSaved(true); return; }
+    if (!user) return;
+    await supabase.from("profiles").update({ full_name: form.full_name.trim().slice(0, 80), phone: form.phone.trim().slice(0, 20) }).eq("id", user.id);
     setSaved(true); qc.invalidateQueries({ queryKey: ["profile"] });
   };
   const field = "w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm outline-none focus:border-primary";
@@ -55,6 +64,7 @@ function Account() {
     <Page>
       <div className="px-4 mt-6 md:mt-10 flex justify-between items-end">
         <h1 className="font-script text-4xl md:text-5xl">My account</h1>
+        {demoRole && <span className="text-accent text-xs">Demo · sample data</span>}
         <button onClick={async () => { await signOut(); navigate({ to: "/", replace: true }); }} className="text-sm text-primary">Sign out</button>
       </div>
       <div className="md:grid md:grid-cols-[360px_1fr] md:gap-8 md:items-start px-4 mt-4">

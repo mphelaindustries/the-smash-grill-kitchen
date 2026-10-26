@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MENU, imageFor, type MenuItem } from "./menu";
+import { useAuth } from "./auth";
+import { getDemoProducts } from "./demo";
 
 export const productsKey = ["products"];
 
@@ -14,7 +16,8 @@ export async function fetchProducts(): Promise<MenuItem[]> {
 }
 
 export function useProducts() {
-  const q = useQuery({ queryKey: productsKey, queryFn: fetchProducts, placeholderData: MENU });
+  const { demoRole } = useAuth();
+  const q = useQuery({ queryKey: demoRole ? ["demo-products"] : productsKey, queryFn: demoRole ? getDemoProducts : fetchProducts, placeholderData: MENU });
   const list = q.data ?? MENU;
   return { products: list, byId: (id: string) => list.find((p) => p.id === id), query: q };
 }

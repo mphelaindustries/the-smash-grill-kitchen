@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { useProducts } from "@/lib/products";
 import { supabase } from "@/integrations/supabase/client";
 import { buildOrder, cartTotal, formatRand, recommendations, SHOP, whatsappUrl } from "@/lib/order";
+import { placeDemoOrder } from "@/lib/demo";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -32,7 +33,7 @@ const schema = z.object({
 
 function CartPage() {
   const { lines, add, setQty, clear, saveOrder } = useCart();
-  const { user } = useAuth();
+  const { user, demoRole } = useAuth();
   const { products, byId, query } = useProducts();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", phone: "", pickupTime: "ASAP (20–30 min)", notes: "" });
@@ -41,14 +42,15 @@ function CartPage() {
   const [submitError, setSubmitError] = useState("");
   const total = cartTotal(lines, products);
   const recs = recommendations(lines, products);
-  const soldOut = lines.filter((l) => byId(l.id) && !byId(l.id)!.inStock);
+  const soldOut = lines.filter((l) => byId(l.id)?.inStock === false);
 
   useEffect(() => {
+    if (demoRole) { setForm((f) => ({ ...f, name: f.name || "Demo Customer", phone: f.phone || "0000000000" })); return; }
     if (!user) return;
     supabase.from("profiles").select("full_name, phone").eq("id", user.id).maybeSingle().then(({ data }) => {
       if (data) setForm((f) => ({ ...f, name: f.name || data.full_name || "", phone: f.phone || data.phone || "" }));
     });
-  }, [user]);
+  }, [user, demoRole]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +61,11 @@ function CartPage() {
     }
     setErrors({}); setSubmitError(""); setSubmitting(true);
     const order = buildOrder(lines, r.data, products);
+    if (demoRole) {
+      const sample = { ...order, ref: "DEMO-" + order.ref };
+      placeDemoOrder(sample); saveOrder(sample); clear(); setSubmitting(false);
+      navigate({ to: "/receipt" }); return;
+    }
     // Open the tab synchronously so pop-up blockers allow it; fill the URL after saving.
     const win = window.open("", "_blank");
     const { error } = await supabase.from("orders").insert({
@@ -151,7 +158,7 @@ function CartPage() {
             <textarea aria-label="Notes" placeholder="Notes (e.g. no onions, extra sauce)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={field} rows={3} />
             {submitError && <p className="text-destructive text-sm">{submitError}</p>}
             <button type="submit" disabled={submitting || soldOut.length > 0} className="w-full rounded-full bg-primary text-primary-foreground py-3.5 font-bold text-base shadow-[var(--shadow-glow)] disabled:opacity-60">
-              {submitting ? "Placing order…" : `Send order on WhatsApp · ${formatRand(total)}`}
+              {submitting ? "Placing order…" : `${demoRole ? "Place demo order" : "Send order on WhatsApp"} · ${formatRand(total)}`}
             </button>
           </form>
         )}

@@ -18,6 +18,8 @@ import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as ReceiptRouteImport } from './routes/receipt'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as DemoAccountRouteImport } from './routes/demo.account'
+import { Route as DemoAdminRouteImport } from './routes/demo.admin'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -63,6 +65,16 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const DemoAccountRoute = DemoAccountRouteImport.update({
+  id: '/demo/account',
+  path: '/demo/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoAdminRoute = DemoAdminRouteImport.update({
+  id: '/demo/admin',
+  path: '/demo/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +85,8 @@ export interface FileRoutesByFullPath {
   '/receipt': typeof ReceiptRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/demo/account': typeof DemoAccountRoute
+  '/demo/admin': typeof DemoAdminRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +97,8 @@ export interface FileRoutesByTo {
   '/receipt': typeof ReceiptRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/demo/account': typeof DemoAccountRoute
+  '/demo/admin': typeof DemoAdminRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +111,8 @@ export interface FileRoutesById {
   '/receipt': typeof ReceiptRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/demo/account': typeof DemoAccountRoute
+  '/demo/admin': typeof DemoAdminRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +125,8 @@ export interface FileRouteTypes {
     | '/receipt'
     | '/account'
     | '/admin'
+    | '/demo/account'
+    | '/demo/admin'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +137,8 @@ export interface FileRouteTypes {
     | '/receipt'
     | '/account'
     | '/admin'
+    | '/demo/account'
+    | '/demo/admin'
   id:
     | '__root__'
     | '/'
@@ -128,6 +150,8 @@ export interface FileRouteTypes {
     | '/receipt'
     | '/_authenticated/account'
     | '/_authenticated/admin'
+    | '/demo/account'
+    | '/demo/admin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -138,6 +162,8 @@ export interface RootRouteChildren {
   MenuRoute: typeof MenuRoute
   OwnerRoute: typeof OwnerRoute
   ReceiptRoute: typeof ReceiptRoute
+  DemoAccountRoute: typeof DemoAccountRoute
+  DemoAdminRoute: typeof DemoAdminRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -205,6 +231,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/demo/account': {
+      id: '/demo/account'
+      path: '/demo/account'
+      fullPath: '/demo/account'
+      preLoaderRoute: typeof DemoAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/admin': {
+      id: '/demo/admin'
+      path: '/demo/admin'
+      fullPath: '/demo/admin'
+      preLoaderRoute: typeof DemoAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -229,6 +269,8 @@ const rootRouteChildren: RootRouteChildren = {
   MenuRoute: MenuRoute,
   OwnerRoute: OwnerRoute,
   ReceiptRoute: ReceiptRoute,
+  DemoAccountRoute: DemoAccountRoute,
+  DemoAdminRoute: DemoAdminRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

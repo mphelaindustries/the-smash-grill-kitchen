@@ -34,8 +34,8 @@ function ReceiptPage() {
     <Page>
       <div className="px-4 mt-6 text-center">
         <CheckCircle2 className="h-12 w-12 text-accent mx-auto" />
-        <h1 className="font-script text-3xl mt-2">Order sent!</h1>
-        <p className="text-sm text-muted-foreground">Make sure you pressed send in WhatsApp. We'll confirm shortly.</p>
+        <h1 className="font-script text-3xl mt-2">{o.ref.startsWith("DEMO-") ? "Demo order placed!" : "Order sent!"}</h1>
+        <p className="text-sm text-muted-foreground">{o.ref.startsWith("DEMO-") ? "Sample receipt · no real order sent" : "Make sure you pressed send in WhatsApp. We'll confirm shortly."}</p>
       </div>
       <div className="receipt mx-4 mt-6 rounded-2xl bg-foreground text-background p-5 font-mono text-sm">
         <div className="text-center">
@@ -59,7 +59,7 @@ function ReceiptPage() {
         <p className="text-center text-xs mt-3">Pay on collection · Thank you! 🔥</p>
       </div>
       <div className="px-4 mt-4 grid grid-cols-2 gap-3 print:hidden">
-        <a href={whatsappUrl(o)} target="_blank" rel="noreferrer" className="rounded-full border border-primary text-primary py-3 text-center font-semibold text-sm">Resend WhatsApp</a>
+        {!o.ref.startsWith("DEMO-") && <a href={whatsappUrl(o)} target="_blank" rel="noreferrer" className="rounded-full border border-primary text-primary py-3 text-center font-semibold text-sm">Resend WhatsApp</a>}
         <button onClick={() => window.print()} className="rounded-full bg-primary text-primary-foreground py-3 font-semibold text-sm">Save / Print</button>
       </div>
     </Page>

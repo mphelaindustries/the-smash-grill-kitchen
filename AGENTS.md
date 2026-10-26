@@ -9,5 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Cart and last order live in browser localStorage (src/lib/cart.tsx); orders go out via a wa.me link, no backend — keeps the store zero-setup.
-- Menu data and prices live only in src/lib/menu.ts; order formatting in src/lib/order.ts (tested).
+- Cart and last receipt live in browser localStorage (src/lib/cart.tsx); placed orders are saved to the orders table (a DB trigger re-prices items and decrements stock) then sent via a wa.me link — prices can't be tampered with client-side.
+- Products live in the products table; src/lib/menu.ts MENU is only the placeholder shown before they load. Images are keys mapped by imageFor().
+- Owner = admin role in user_roles; the first signed-in user to call claim_owner() becomes owner, after that nobody can claim.
+- Order formatting and recommendations in src/lib/order.ts (tested).

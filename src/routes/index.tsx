@@ -35,8 +35,8 @@ function Home() {
       <section className="relative h-[420px] md:h-[560px] overflow-hidden md:rounded-3xl md:mt-4">
         <img src={IMAGES.platter} alt="Smash Grill chefs plating burgers, shawarma and fries" className="absolute inset-0 h-full w-full object-cover object-top md:object-center" />
         <div className="absolute inset-0 bg-[image:var(--gradient-hero)]" />
-        <div className="relative p-5 pt-10 md:p-14 md:pt-24 max-w-xs md:max-w-xl">
-          <h1 className="font-script text-5xl md:text-8xl leading-[0.95] -rotate-3">Smashed Hot,<br /><span className="text-primary text-6xl md:text-9xl">Grilled Bold</span></h1>
+        <div className="relative p-5 pt-10 md:p-14 md:pt-24 max-w-xs md:max-w-3xl">
+          <h1 className="font-script text-5xl md:text-8xl leading-[0.95] -rotate-3 md:whitespace-nowrap">Smashed Hot,<br /><span className="text-primary text-6xl md:text-9xl">Grilled Bold</span></h1>
           <p className="mt-4 md:mt-8 text-sm md:text-lg text-foreground/90">Fresh off the flat-top. Order now, collect at the kitchen.</p>
           <Link to="/menu" className="hidden md:inline-flex mt-8 items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 font-bold shadow-[var(--shadow-glow)]">Order now <ArrowRight className="h-4 w-4" /></Link>
         </div>

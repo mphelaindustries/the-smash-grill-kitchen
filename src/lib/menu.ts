@@ -5,6 +5,9 @@ import chicken from "@/assets/chicken.jpg";
 import grabs from "@/assets/grabs.jpg";
 
 export const IMAGES = { wrap: wrap.url, platter: platter.url, grill: grill.url, chicken, grabs };
+export const IMAGE_KEYS = Object.keys(IMAGES);
+/** Products store an image key (wrap, grill…) or a full URL. */
+export const imageFor = (key: string) => (IMAGES as Record<string, string>)[key] ?? key;
 
 export type Category = "burgers" | "chicken" | "shawarma" | "grabs";
 export const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
@@ -14,32 +17,38 @@ export const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
   { id: "grabs", label: "Hot Smash Grabs", emoji: "🍟" },
 ];
 
-export type MenuItem = { id: string; name: string; price: number; category: Category; image: string; tag?: string };
+export type MenuItem = {
+  id: string; name: string; price: number; category: string; image: string;
+  imageKey: string; tag?: string | null; inStock: boolean; stock: number | null;
+};
 
-const I = IMAGES;
-export const MENU: MenuItem[] = [
-  { id: "chicken-smash-burger", name: "Chicken Smash Burger", price: 35, category: "burgers", image: I.grill },
-  { id: "chicken-burger-chips", name: "Chicken Burger + Chips", price: 60, category: "burgers", image: I.platter },
-  { id: "burger-chips-drink", name: "Burger + Chips & Drink", price: 75, category: "burgers", image: I.platter },
-  { id: "beef-smash-burger", name: "Beef Smash Burger", price: 45, category: "burgers", image: I.grill, tag: "Bestseller" },
-  { id: "beef-smash-burger-chips", name: "Beef Smash Burger + Chips", price: 75, category: "burgers", image: I.platter },
-  { id: "sm-burger-chips-drink", name: "SM Burger + Chips & Drink", price: 85, category: "burgers", image: I.platter, tag: "Combo" },
-  { id: "quarter-chicken-chips", name: "1/2 Chicken + Chips", price: 60, category: "chicken", image: I.chicken },
-  { id: "half-chicken-chips", name: "Half Chicken + Chips", price: 90, category: "chicken", image: I.chicken, tag: "Bestseller" },
-  { id: "full-chicken-large-chips", name: "Full Chicken + Large Chips", price: 160, category: "chicken", image: I.chicken, tag: "Family" },
-  { id: "full-chicken-chips-rolls", name: "F Chicken & L Chips + 4 Rolls", price: 185, category: "chicken", image: I.chicken, tag: "Family" },
-  { id: "shawarma-chicken-chips", name: "Chicken Shawarma + Chips", price: 60, category: "shawarma", image: I.wrap, tag: "Bestseller" },
-  { id: "shawarma-chicken-chips-drink", name: "Chicken Shawarma + Chips & Drink", price: 75, category: "shawarma", image: I.wrap },
-  { id: "shawarma-beef-chips", name: "Beef Shawarma + Chips", price: 75, category: "shawarma", image: I.wrap },
-  { id: "shawarma-beef-chips-drink", name: "Beef Shawarma + Chips & Drink", price: 85, category: "shawarma", image: I.wrap },
-  { id: "hot-dog-chicken", name: "Hot Dog Chicken", price: 25, category: "grabs", image: I.grabs },
-  { id: "hot-bun-beef", name: "Hot Bun Beef", price: 30, category: "grabs", image: I.grabs },
-  { id: "small-chips", name: "Small Chips", price: 20, category: "grabs", image: I.grabs },
-  { id: "large-chips", name: "Large Chips", price: 30, category: "grabs", image: I.grabs },
-  { id: "meat-fries-small", name: "Meat Fries Small", price: 30, category: "grabs", image: I.grabs },
-  { id: "meat-fries-large", name: "Meat Fries Large", price: 50, category: "grabs", image: I.grabs, tag: "Must try" },
-  { id: "cold-drink-small", name: "Cold Drink Small", price: 15, category: "grabs", image: I.grabs },
-  { id: "cold-drink-large", name: "Cold Drink Large", price: 20, category: "grabs", image: I.grabs },
+type Raw = [id: string, name: string, price: number, category: Category, image: string, tag?: string];
+const RAW: Raw[] = [
+  ["chicken-smash-burger", "Chicken Smash Burger", 35, "burgers", "grill"],
+  ["chicken-burger-chips", "Chicken Burger + Chips", 60, "burgers", "platter"],
+  ["burger-chips-drink", "Burger + Chips & Drink", 75, "burgers", "platter"],
+  ["beef-smash-burger", "Beef Smash Burger", 45, "burgers", "grill", "Bestseller"],
+  ["beef-smash-burger-chips", "Beef Smash Burger + Chips", 75, "burgers", "platter"],
+  ["sm-burger-chips-drink", "SM Burger + Chips & Drink", 85, "burgers", "platter", "Combo"],
+  ["quarter-chicken-chips", "1/2 Chicken + Chips", 60, "chicken", "chicken"],
+  ["half-chicken-chips", "Half Chicken + Chips", 90, "chicken", "chicken", "Bestseller"],
+  ["full-chicken-large-chips", "Full Chicken + Large Chips", 160, "chicken", "chicken", "Family"],
+  ["full-chicken-chips-rolls", "F Chicken & L Chips + 4 Rolls", 185, "chicken", "chicken", "Family"],
+  ["shawarma-chicken-chips", "Chicken Shawarma + Chips", 60, "shawarma", "wrap", "Bestseller"],
+  ["shawarma-chicken-chips-drink", "Chicken Shawarma + Chips & Drink", 75, "shawarma", "wrap"],
+  ["shawarma-beef-chips", "Beef Shawarma + Chips", 75, "shawarma", "wrap"],
+  ["shawarma-beef-chips-drink", "Beef Shawarma + Chips & Drink", 85, "shawarma", "wrap"],
+  ["hot-dog-chicken", "Hot Dog Chicken", 25, "grabs", "grabs"],
+  ["hot-bun-beef", "Hot Bun Beef", 30, "grabs", "grabs"],
+  ["small-chips", "Small Chips", 20, "grabs", "grabs"],
+  ["large-chips", "Large Chips", 30, "grabs", "grabs"],
+  ["meat-fries-small", "Meat Fries Small", 30, "grabs", "grabs"],
+  ["meat-fries-large", "Meat Fries Large", 50, "grabs", "grabs", "Must try"],
+  ["cold-drink-small", "Cold Drink Small", 15, "grabs", "grabs"],
+  ["cold-drink-large", "Cold Drink Large", 20, "grabs", "grabs"],
 ];
 
-export const byId = (id: string) => MENU.find((m) => m.id === id);
+/** Fallback shown before live products load (the live list comes from the database). */
+export const MENU: MenuItem[] = RAW.map(([id, name, price, category, img, tag]) => ({
+  id, name, price, category, imageKey: img, image: imageFor(img), tag: tag ?? null, inStock: true, stock: null,
+}));

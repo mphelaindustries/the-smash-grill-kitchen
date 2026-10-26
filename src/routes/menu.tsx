@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Page, ItemCard } from "@/components/Shell";
-import { CATEGORIES, MENU } from "@/lib/menu";
+import { CATEGORIES } from "@/lib/menu";
+import { useProducts } from "@/lib/products";
 
 export const Route = createFileRoute("/menu")({
   head: () => ({
@@ -17,17 +18,22 @@ export const Route = createFileRoute("/menu")({
 });
 
 function MenuPage() {
+  const { products } = useProducts();
   return (
     <Page>
-      <h1 className="font-display text-6xl px-4 mt-6 leading-none uppercase"><span className="text-primary">Food</span><br />Menu</h1>
-      {CATEGORIES.map((c) => (
-        <section key={c.id} id={c.id} className="scroll-mt-20">
-          <h2 className="font-display text-3xl text-primary uppercase px-4 mt-8 mb-3">{c.label}</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 px-4">
-            {MENU.filter((m) => m.category === c.id).map((m) => <ItemCard key={m.id} item={m} />)}
-          </div>
-        </section>
-      ))}
+      <h1 className="font-display text-6xl md:text-8xl px-4 mt-6 md:mt-10 leading-none uppercase"><span className="text-primary">Food</span><br />Menu</h1>
+      {CATEGORIES.map((c) => {
+        const items = products.filter((m) => m.category === c.id);
+        if (!items.length) return null;
+        return (
+          <section key={c.id} id={c.id} className="scroll-mt-20">
+            <h2 className="font-display text-3xl md:text-4xl text-primary uppercase px-4 mt-8 md:mt-12 mb-3 md:mb-5">{c.label}</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5 px-4">
+              {items.map((m) => <ItemCard key={m.id} item={m} />)}
+            </div>
+          </section>
+        );
+      })}
     </Page>
   );
 }
